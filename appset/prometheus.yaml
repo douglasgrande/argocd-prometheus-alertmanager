@@ -34,7 +34,7 @@ spec:
           helm:
             releaseName: monitor
             valueFiles:
-              - $values/values/prometheus/'{{.name}}-prometheus.yaml
+              - $values/values/prometheus/{{.name}}-prometheus.yaml
         # default values
         - repoURL: https://github.com/douglasgrande/argocd-lab-monitoring.git
           targetRevision: HEAD
