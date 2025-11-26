@@ -15,7 +15,7 @@ spec:
     metadata:
       name: '{{.name}}-prometheus-stack'
     spec:
-      project: prometheus
+      project: default
       destination:
         server: '{{.server}}'
         namespace: monitoring
@@ -36,6 +36,6 @@ spec:
             valueFiles:
               - $values/values/prometheus/{{.name}}-prometheus.yaml
         # default values
-        - repoURL: https://github.com/douglasgrande/argocd-lab-monitoring.git
+        - repoURL: https://github.com/douglasgrande/argocd-prometheus-alertmanager.git
           targetRevision: HEAD
           ref: values
