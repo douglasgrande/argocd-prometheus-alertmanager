@@ -36,7 +36,7 @@ spec:
             valueFiles:
               - $values/values/prometheus/core-values/default-prometheus.yaml
               - $values/values/prometheus/custom-values/{{.name}}.yaml
-              #- $values/values/prometheus/custom-values/rules/{{.name}}-rules.yaml
+              - $values/values/prometheus/custom-values/rules/{{.name}}-rules.yaml
         # default values
         - repoURL: https://github.com/douglasgrande/argocd-prometheus-alertmanager.git
           targetRevision: HEAD
