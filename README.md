@@ -67,7 +67,7 @@ argocd-server-metrics                     ClusterIP   10.101.149.69    <none>   
 ```
 Imprimir secrets (password) do usuário admin para efetuar acesso:
 ```
-kubectl -n argo get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 ```
 Efetuar port-forward para efetuar acesso ao ArgoCD GUI:
 ```
