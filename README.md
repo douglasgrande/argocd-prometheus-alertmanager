@@ -9,6 +9,8 @@ Este lab visa fornecer uma configuração para monitorar aplicações e infraest
 * Minikube
 * ArgoCD
 * Argo CLI
+* redis-exporter
+> NOTA: O redis-exporter está sendo instalado para validação de estrutura de diretórios na condição observabilitade específica por cluster. 
 
 ## 🛠️ Instalação dos pré-requisitos
 ### Minikube
@@ -110,6 +112,96 @@ Efetuar login no cluster:
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 argocd login localhost:8080
 ```
+### Redis-exporter
+```
+helm upgrade --install redis-exporter prometheus-community/prometheus-redis-exporter --version 6.2.0 --namespace monitoring
+```
+O redis exporter monitora um valkey-standalone instalado com os seguintes passos:
+
+volume-clain.yaml
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: valkey-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce # O volume pode ser montado para leitura/escrita por um único nó
+  resources:
+    requests:
+      storage: 10Gi
+
+```
+Instalação:
+```bash
+kubectl apply -f volume-clain.yaml
+```
+
+valkey-standalone.yaml
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey-deployment
+  labels:
+    app: valkey
+spec:
+  replicas: 1 # O 'replicas: 1' é o equivalente a uma única instância no docker-compose
+  selector:
+    matchLabels:
+      app: valkey
+  template:
+    metadata:
+      labels:
+        app: valkey
+    spec:
+      containers:
+      - name: valkey-standalone
+        image: valkey/valkey:8.1
+        resources:
+          limits:
+            memory: "2Gi" # Equivalente ao 'mem_limit: 2G'
+            cpu: "1"      # Equivalente ao 'cpu_count: 1'
+        command:
+          - "valkey-server"
+          - "--dbfilename"
+          - "dump.rdb"
+          - "--dir"
+          - "/data"
+        ports:
+        - containerPort: 6379 # Porta interna do contêiner
+        volumeMounts:
+        - name: valkey-data
+          mountPath: /data
+      volumes:
+        # Usa um PersistentVolumeClaim (PVC) para persistência, 
+        # que é o equivalente mais próximo do volume de host no Docker Compose.
+        # **Nota:** Um PVC correspondente (como `valkey-pvc`) deve ser criado separadamente.
+      - name: valkey-data
+        persistentVolumeClaim:
+          claimName: valkey-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey-service
+spec:
+  selector:
+    app: valkey # Associa ao Deployment Valkey
+  ports:
+    - protocol: TCP
+      port: 6379      # Porta do Service (interna do cluster)
+      targetPort: 6379  # Porta do contêiner
+      nodePort: 30679 # Opcional: Para expor fora do cluster (tipo NodePort)
+  type: NodePort
+
+```
+Instalação:
+```bash
+kubectl apply -f valkey-standalone.yaml
+```
+> NOTA: O monitoramento do valkey-standalone está configurado no diretório $repo/custom-values/jobs/ apresentado na estrutura abaixo.
+
 ## 📦 Estrutura do repositório
 ```
 ├── appset/                               # Manifestos do ArgoCD (ApplicationSet) para a implantação
