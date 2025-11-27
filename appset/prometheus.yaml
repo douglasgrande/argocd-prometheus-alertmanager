@@ -35,9 +35,12 @@ spec:
             releaseName: monitor
             valueFiles:
               - $values/values/prometheus/core-values/default-prometheus.yaml
+              - $values/values/prometheus/core-values/exporters/default-exporters.yaml
+              - $values/values/prometheus/core-values/rules/default-rules.yaml
               - $values/values/prometheus/custom-values/{{.name}}.yaml
               - $values/values/prometheus/custom-values/rules/{{.name}}-rules.yaml
+              - $values/values/prometheus/custom-values/jobs/{{.name}}-jobs.yaml
         # default values
         - repoURL: https://github.com/douglasgrande/argocd-prometheus-alertmanager.git
-          targetRevision: HEAD
+          targetRevision: lab-dir-segregation
           ref: values
