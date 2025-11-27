@@ -71,16 +71,6 @@ additionalPrometheusRulesMap:
               message: "The number of pod restart is over 5 in namespace {{ $labels.namespace }}"
             labels:
               severity: high
-      - name: kube-pod-readiness
-        rules:
-          - alert: K8sPodsNoReadiness
-            expr: avg by (namespace,pod,container) (kube_pod_container_status_ready) == 0 and kube_pod_info{created_by_kind!="Job"}
-            for: 5m
-            annotations:
-              summary: "K8s Pods with Problems: No Readiness"
-              message: "K8s Pods with Problems: No Readiness (1/2 for example) in namespace {{ $labels.namespace }}"
-            labels:
-              severity: critical
       - name: kube-pod-pending
         rules:
           - alert: KubePodPending
