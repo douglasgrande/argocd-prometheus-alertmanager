@@ -112,15 +112,24 @@ argocd login localhost:8080
 ```
 ## 📦 Estrutura do repositório
 ```
-├── appset/                           # Manifestos do ArgoCD (ApplicationSet) para a implantação
-│   ├── prometheus-cdrs.yaml          # Configurações para CRDs do Prometheus
-│   └── prometheus.yaml               # Configurações do Prometheus
-├── values/                           # Diretório de definições do prometheus
-│   ├── core-values/                  # Diretório dos values comum do prometheus para todos os clusteres
-│   |   └── default-prometheus.yaml   # Values do prometheus
-│   └── custom-values/                # Diretório de definições específicas por cluster do prometheus
-│       ├── rules/                    # Diretório de definições regras / grupos de alertas
-│       └── in-cluster.yaml           # Values de definições específicas por cluster do prometheus
+├── appset/                               # Manifestos do ArgoCD (ApplicationSet) para a implantação
+│   ├── prometheus-cdrs.yaml              # Configurações para CRDs do Prometheus
+│   └── prometheus.yaml                   # Configurações do Prometheus
+├── values/                               # Diretório de definições do prometheus
+│   ├── core-values/                      # Diretório dos values comuns do prometheus para todos os clusteres
+│   |   |── exporters/                    # Diretório dos values dos exporters comuns do prometheus
+│   |   |    └── default-exporters.yaml   # Values dos exporters comuns do prometheus
+│   |   |── jobs/                         # Diretório dos values das jobs comuns do prometheus
+│   |   |── rules/                        # Diretório dos values das rules de alertas comuns do prometheus
+│   |   |    └── default-rules.yaml       # Values das rules de alertas comuns do prometheus
+│   |   └── default-prometheus.yaml       # Values do prometheus
+│   └── custom-values/                    # Diretório de definições específicas por cluster do prometheus
+│       ├── exporters/                    # Diretório dos values exporters específicos por cluster do prometheus
+│       ├── jobs/                         # Diretório dos values das jobs de alertas específicas por cluster do prometheus
+│       |    └── in-cluster-jobs.yaml     # Values das jobs de alertas específicas por cluster do prometheus
+│       ├── rules/                        # Diretório dos values das rules de alertas específicas por cluster do prometheus
+│       |    └── in-cluster-rules.yaml    # Values das rules de alertas específicas por cluster do prometheus
+│       └── in-cluster.yaml               # Values de definições específicas por cluster do prometheus
 └── README.md
 ```
 ## 🚀 Como Usar
