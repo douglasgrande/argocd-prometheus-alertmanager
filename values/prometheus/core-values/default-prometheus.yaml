@@ -1,0 +1,286 @@
+## Default prometheus-operator values for all environments
+## General
+nameOverride: "lab-argocd"
+
+defaultRules:
+  rules:
+    etcd: false
+    kubeScheduler: false
+    alertmanager: false
+    general: false
+    k8sContainerCpuUsageSecondsTotal: false
+    k8sContainerMemoryCache: false
+    k8sContainerMemoryRss: false
+    k8sContainerMemorySwap: false
+    k8sContainerResource: false
+    k8sContainerMemoryWorkingSetBytes: false
+    k8sPodOwner: false
+    kubeApiserverAvailability: false
+    kubeApiserverBurnrate: false
+    kubeApiserverHistogram: false
+    kubeApiserverSlos: false
+    kubeControllerManager: false
+    kubelet: false
+    kubeProxy: false
+    kubePrometheusGeneral: false
+    kubePrometheusNodeRecording: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    node: false
+    nodeExporterRecording: false
+    windows: false
+
+additionalPrometheusRulesMap:
+  kube-custom-alerts:
+    groups:
+      - name: kube-health-replicas
+        rules:
+          - alert: KubeHealthReplicas
+            expr: kube_deployment_status_replicas_available{job="kube-state-metrics",namespace=~".*",deployment!="pingsource-mt-adapter"} == 0
+            for: 3m
+            annotations:
+              summary: "Health replicas is zero"
+              message: "Health replicas is zero for 3m in namespace {{ $labels.namespace }}"
+            labels:
+              severity: critical
+      - name: kube-hpa-max
+        rules:
+          - alert: KubeMaxHpaReachingOut
+            expr: kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler!~"logstash.*",job="kube-state-metrics",namespace=~".*"} == ceil(kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",namespace=~".*"} * 0.8) AND kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",namespace=~".*"} != 1 AND kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",namespace=~".*"} != kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics",namespace=~".*"}
+            for: 5m
+            annotations:
+              summary: "HPA is running at 80% of max replicas"
+              message: "HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} has been running at 80% of max replicas for longer than 5 minutes."
+            labels:
+              severity: high
+          - alert: KubeMaxHpaReachedOut
+            expr: kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler!~"logstash.*",job="kube-state-metrics",namespace=~".*"} == kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",namespace=~".*"} AND kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",namespace=~".*"} != 1 AND kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",namespace=~".*"} != kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics",namespace=~".*"}
+            for: 0m
+            annotations:
+              summary: "HPA is running at max replicas"
+              message: "HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} has been running at max replicas"
+            labels:
+              severity: critical
+      - name: kube-pod-restart
+        rules:
+          - alert: KubePodRestartTotal
+            expr: sum by (namespace) (kube_pod_container_status_restarts_total{namespace=~".*"} > 5)
+            for: 5m
+            annotations:
+              summary: "The number of pod restart is over 5"
+              message: "The number of pod restart is over 5 in namespace {{ $labels.namespace }}"
+            labels:
+              severity: high
+      - name: kube-pod-readiness
+        rules:
+          - alert: K8sPodsNoReadiness
+            expr: avg by (namespace,pod,container) (kube_pod_container_status_ready) == 0 and kube_pod_info{created_by_kind!="Job"}
+            for: 5m
+            annotations:
+              summary: "K8s Pods with Problems: No Readiness"
+              message: "K8s Pods with Problems: No Readiness (1/2 for example) in namespace {{ $labels.namespace }}"
+            labels:
+              severity: critical
+      - name: kube-pod-pending
+        rules:
+          - alert: KubePodPending
+            expr: kube_pod_status_phase{phase="Pending"} > 0
+            for: 5m
+            annotations:
+              summary: Pod status "Pending" for longer than 5 minutes
+              message: Pod status "Pending" for longer than 5 minutes - {{ $labels.namespace }}/{{ $labels.pod }}
+            labels:
+              severity: critical
+  
+  # Node exporter alerts
+  node-exporter:
+    groups:
+      - name: node-exporter
+        rules:
+          - alert: CPUSystemUsageTooLow
+            expr: avg(rate(node_cpu_seconds_total{mode="system"}[5m])) * 100 < 2
+            for: 5m
+            annotations:
+              summary: "CPU System Usage Critically Low on {{ $externalLabels.cluster }}"
+              description: "CPU System usage on {{ $externalLabels.cluster }} is below 2% for the last 5 minutes (current value: {{ $value }}%). Investigate potential system issues or underutilization."
+            labels:
+              severity: critical
+          - alert: CPUUserUsageTooLow
+            expr: avg(rate(node_cpu_seconds_total{mode="user"}[5m])) * 100 < 5
+            for: 5m
+            annotations:
+              summary: "CPU User Usage Critically Low on {{ $externalLabels.cluster }}"
+              description: "CPU User usage on {{ $externalLabels.cluster }} is below 5% for the last 5 minutes (current value: {{ $value }}%). Possible application issues or underutilization detected."
+            labels:
+              severity: critical
+          - alert: CPUIdleTooHigh
+            expr: avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100 > 90
+            for: 5m
+            annotations:
+              summary: "CPU Idle Extremely High on {{ $externalLabels.cluster }}"
+              description: "CPU Idle on {{ $externalLabels.cluster }} has exceeded 90% for the last 5 minutes (current value: {{ $value }}%). Investigate potential underutilization or resource allocation issues."
+            labels:
+              severity: critical
+          - alert: NetworkReceiveTooLow
+            expr: avg(rate(node_network_receive_bytes_total[5m])) < 10000
+            for: 5m
+            annotations:
+              summary: "Network Receive Traffic Critically Low on {{ $externalLabels.cluster }}"
+              description: "Network receive traffic (RX) on {{ $externalLabels.cluster }} is below 10KB/s for the last 5 minutes (current value: {{ $value }} bytes/s). Possible network issue or service downtime."
+            labels:
+              severity: critical
+          - alert: NetworkTransmitTooLow
+            expr: avg(rate(node_network_transmit_bytes_total[5m])) < 10000
+            for: 5m
+            annotations:
+              summary: "Network Transmit Traffic Critically Low on {{ $externalLabels.cluster }}"
+              description: "Network transmit traffic (TX) on {{ $externalLabels.cluster }} is below 10KB/s for the last 5 minutes (current value: {{ $value }} bytes/s). Investigate potential network issues or service disruptions."
+            labels:
+              severity: critical
+      - name: node-exporter-nat-instances
+        rules:
+          - alert: ConntrackLimitNear
+            expr: node_nf_conntrack_entries / node_nf_conntrack_entries_limit * 100 > 80
+            for: 5m
+            annotations:
+              summary: The number of connections tracked by conntrack has increased.
+              message: The number of connections tracked by conntrack in {{ $labels.instance }} is at 80%, close to the limit.
+            labels:
+              severity: critical
+          - alert: HighBandwidthUsage
+            expr: irate(node_network_receive_bytes_total{job="node-exporter-nat-instances", device=~"ens."}[5m]) / irate(node_network_transmit_bytes_total{job="node-exporter-nat-instances", device=~"ens."}[5m]) * 8 > 4000000000
+            for: 5m
+            annotations:
+              summary: Network bandwidth usage is greater than 4 Gbps.
+              message: Network bandwidth usage on interface {{ $labels.device }} on instance {{ $labels.instance }} has exceeded 4 Gbps, close to the 5 Gbps limit.
+            labels:
+              severity: critical
+
+## Alertmanager
+alertmanager:
+  enabled: false
+
+## Grafana
+grafana:
+  enabled: false
+
+## Exporters
+kubernetesServiceMonitors:
+  enabled: true
+
+kubeApiServer:
+  enabled: false
+
+kubelet:
+  enabled: true
+  serviceMonitor:
+    metricRelabelings:
+      - sourceLabels:
+          - __name__
+        regex: ^go_.*
+        action: drop
+
+kubeControllerManager:
+  enabled: false
+
+coreDns:
+  enabled: false
+
+kubeDns:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+kubeStateMetrics:
+  enabled: false
+
+# Default exporters
+prometheus-node-exporter:
+  podLabels:
+    jobLabel: node-exporter
+  releaseLabel: true
+  extraArgs:
+    - --collector.disable-defaults
+    - --web.disable-exporter-metrics
+    - --collector.uname
+    - --collector.cpu
+    - --collector.meminfo
+    - --collector.diskstats
+    - --collector.filesystem
+    - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+    - --collector.loadavg
+    - --collector.netstat
+    - --collector.sockstat
+    - --collector.netdev
+    - --collector.netclass
+    - --collector.systemd
+  prometheus:
+    monitor:
+      enabled: true
+      metricRelabelings:
+        - sourceLabels:
+            - __name__
+          regex: ^node_.*(guest|discard|flush|info|FileHugePages|FilePmdMapped|ShmemHugePages|ShmemPmdMapped|KReclaimable|Icmp|Ip6|UdpLite6|Udp6|UDP6|UDPLITE6|RcvbufErrors|dormant|FRAG6|flags|TCP6|protocol|assign|iface|nohandler|RAW6|Percpu|Writeback_bytes|TCPTimeouts|OutRsts|device_id|changes|SndbufErrors|dev_group|device_error).*
+          action: drop
+
+
+## Prometheus operator
+prometheusOperator:
+  admissionWebhooks:
+    enabled: true
+  kubeletService:
+    enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 400Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  serviceMonitor:
+    metricRelabelings:
+      - sourceLabels:
+          - __name__
+        regex: ^go_.*
+        action: drop
+global:
+  imagePullSecrets:
+   - name: "dockerhub"
+
+## Prometheus
+prometheus:
+  enabled: true
+  serviceMonitor:
+    metricRelabelings:
+      - sourceLabels:
+          - __name__
+        regex: ^go_.*
+        action: drop
+  prometheusSpec:
+    image:
+      registry: quay.io
+      repository: prometheus/prometheus
+      tag: v2.48.1
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    replicas: 1
+    scrapeInterval: 60s
+    replicaExternalLabelName: "replica"
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+thanosRuler:
+  enabled: false

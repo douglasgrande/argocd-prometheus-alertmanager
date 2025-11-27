@@ -1,0 +1,21 @@
+    # ArgoCD Alerts
+    argocd:
+      groups:
+      - name: argocd-alerts
+        rules:
+        - alert: ArgoAppSyncUnknown
+          expr: argocd_app_info{sync_status="Unknown"} >= 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Application sync status is unknown"
+            message: "The application '{{ $labels.name }}' in project '{{ $labels.project }}' in repository '{{$labels.repo}} has an unknown sync status."
+        - alert: ArgoAppOutOfSync
+          expr: argocd_app_info{sync_status="OutOfSync"} >= 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Application is out of sync"
+            message: "The application '{{ $labels.name }}' in project '{{ $labels.project }}' is out of sync with the desired state."
