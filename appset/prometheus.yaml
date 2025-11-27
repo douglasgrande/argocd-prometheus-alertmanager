@@ -42,5 +42,5 @@ spec:
               - $values/values/prometheus/custom-values/jobs/{{.name}}-jobs.yaml
         # default values
         - repoURL: https://github.com/douglasgrande/argocd-prometheus-alertmanager.git
-          targetRevision: lab-dir-segregation
+          targetRevision: main
           ref: values

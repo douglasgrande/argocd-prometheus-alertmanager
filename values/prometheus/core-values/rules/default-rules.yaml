@@ -105,24 +105,6 @@ additionalPrometheusRulesMap:
               description: "Network transmit traffic (TX) on {{ $externalLabels.cluster }} is below 10KB/s for the last 5 minutes (current value: {{ $value }} bytes/s). Investigate potential network issues or service disruptions."
             labels:
               severity: critical
-      - name: node-exporter-nat-instances
-        rules:
-          - alert: ConntrackLimitNear
-            expr: node_nf_conntrack_entries / node_nf_conntrack_entries_limit * 100 > 80
-            for: 5m
-            annotations:
-              summary: The number of connections tracked by conntrack has increased.
-              message: The number of connections tracked by conntrack in {{ $labels.instance }} is at 80%, close to the limit.
-            labels:
-              severity: critical
-          - alert: HighBandwidthUsage
-            expr: irate(node_network_receive_bytes_total{job="node-exporter-nat-instances", device=~"ens."}[5m]) / irate(node_network_transmit_bytes_total{job="node-exporter-nat-instances", device=~"ens."}[5m]) * 8 > 4000000000
-            for: 5m
-            annotations:
-              summary: Network bandwidth usage is greater than 4 Gbps.
-              message: Network bandwidth usage on interface {{ $labels.device }} on instance {{ $labels.instance }} has exceeded 4 Gbps, close to the 5 Gbps limit.
-            labels:
-              severity: critical
   # ArgoCD alerts
   argocd:
     groups:
