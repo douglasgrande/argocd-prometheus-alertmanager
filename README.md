@@ -76,7 +76,7 @@ Acessar a URL localhost:8080 e usar as credências a seguir:
 * Password: secrets (informado nos passos anteriores)
 > NOTA: Efetuar alteração da senha.
 
-### Argo CLI
+### ArgoCD CLI
 ```
 VERSION=$(curl -L -s https://raw.githubusercontent.com/argoproj/argo-cd/stable/VERSION)
 curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/v$VERSION/argocd-linux-amd64
@@ -138,6 +138,7 @@ kubectl apply -f prometheus-cdrs.yaml
 kubectl apply -f prometheus.yaml
 ```
 Resultado esperado:
+
 Via ArgoCD CLI
 ```
 argocd appset list
