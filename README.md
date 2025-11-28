@@ -10,7 +10,7 @@ Este lab visa fornecer uma configuração para monitorar aplicações e infraest
 * ArgoCD
 * Argo CLI
 * Redis-exporter
-  * O redis-exporter está sendo instalado para validação de estrutura de diretórios na condição observabilidade específica por cluster. 
+  * O redis-exporter está sendo instalado para validação de estrutura de diretórios na condição observabilitade específica por cluster. 
 
 ## 🛠️ Instalação dos pré-requisitos
 ### Minikube
