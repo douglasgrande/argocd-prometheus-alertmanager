@@ -1,0 +1,14 @@
+alertmanager:
+  enabled: true
+
+  alertmanagerSpec:
+    logLevel: info
+    configSecret: alertmanager-default
+    replicas: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 500Mi

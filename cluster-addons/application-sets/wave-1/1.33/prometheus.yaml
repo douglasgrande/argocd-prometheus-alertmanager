@@ -36,9 +36,10 @@ spec:
             valueFiles:
               # Reference: gitops-management
               - $values/testing/aws/us-east-1/data-plane/in-cluster/prometheus/apps/prometheus/default-prometheus.yaml
+              - $values/testing/aws/us-east-1/data-plane/in-cluster/prometheus/apps/prometheus/default-prometheus-alertmanager.yaml
               - $values/testing/aws/us-east-1/data-plane/in-cluster/prometheus/apps/prometheus/exporters/default-exporters.yaml
               - $values/testing/aws/us-east-1/data-plane/in-cluster/prometheus/apps/prometheus/rules/default-rules.yaml
-              # Reference: production-service-values
+              # Reference: production-service-values / addons / cluster
               - $values/apim/in-cluster/prometheus/prometheus.yaml
               - $values/apim/in-cluster/prometheus/rules/in-cluster-rules.yaml
               - $values/apim/in-cluster/prometheus/jobs/in-cluster-jobs.yaml
