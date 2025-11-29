@@ -3,6 +3,6 @@ prometheus:
     additionalAlertManagerConfigs:
       - static_configs:
           - targets: [
-            "lab-argocd-alertmanager.monitoring.svc.cluster.local:9091"
+            "lab-alertmanager.monitoring.svc.cluster.local:9093"
           ]
         scheme: http
