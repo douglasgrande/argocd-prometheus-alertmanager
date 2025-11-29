@@ -7,10 +7,11 @@ Este lab visa fornecer uma configuração para monitorar aplicações e infraest
 
 ## ⚙️ Pré-requisitos
 * Minikube
+* Alertmanager
 * ArgoCD
 * Argo CLI
 * Redis-exporter
-  * O redis-exporter está sendo instalado para validação de estrutura de diretórios na condição observabilidade específica por cluster. 
+  * O redis-exporter está sendo instalado para validação de estrutura de diretórios na condição observabilidade específica por cluster.
 
 ## 🛠️ Instalação dos pré-requisitos
 ### Minikube
@@ -36,6 +37,11 @@ kube-system   kube-proxy-q8c7h                                         1/1     R
 kube-system   kube-proxy-t9vlx                                         1/1     Running   0             3m    192.168.67.3   argocd-prometheus-alertmanager-m02   <none>           <none>
 kube-system   kube-scheduler-argocd-prometheus-alertmanager            1/1     Running   0             3m    192.168.67.2   argocd-prometheus-alertmanager       <none>           <none>
 kube-system   storage-provisioner                                      1/1     Running   0             3m    192.168.67.2   argocd-prometheus-alertmanager       <none>           <none>
+```
+### Alertmanager
+Instalação
+```
+helm install lab-argocd-alertmanager prometheus-community/alertmanager -n monitoring -f alertmanager.yaml
 ```
 ### ArgoCD
 ```
